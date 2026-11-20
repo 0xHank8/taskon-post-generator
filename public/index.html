@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#10131a">
+    <meta name="description" content="将 TaskOn Quest 链接转成可复制的英文社群文案和活动配图。">
+    <title>TaskOn 社群帖生成器</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>TaskOn<span class="brand-divider"></span><span class="brand-tool">社群工具</span></span>
+        </div>
+        <span class="local-status"><i aria-hidden="true"></i>本机运行</span>
+      </div>
+    </header>
+
+    <main class="shell">
+      <div class="intro">
+        <h1>生成社群帖</h1>
+        <p>粘贴 TaskOn Quest 链接，生成可复制的英文文案和活动配图。</p>
+      </div>
+
+      <div class="workspace">
+        <div class="column">
+          <section class="panel" aria-labelledby="quest-heading">
+            <h2 id="quest-heading">活动链接</h2>
+            <form id="quest-form" novalidate>
+              <div class="url-row">
+                <input id="quest-url" type="url" aria-label="TaskOn Quest 链接" aria-describedby="import-status" placeholder="https://taskon.xyz/quest/…" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+                <button id="import-button" class="button primary" type="submit">生成</button>
+              </div>
+              <div class="import-meta">
+                <button id="sample-button" class="text-button" type="button">使用 MEXC 示例</button>
+                <p class="feedback" id="import-status" role="status"></p>
+              </div>
+            </form>
+
+            <details id="campaign-editor" class="campaign-editor" hidden>
+              <summary>编辑活动信息</summary>
+              <div class="fields" id="campaign-fields">
+                <label class="field full"><span>活动标题</span><input data-field="title" type="text" autocomplete="off"></label>
+                <label class="field"><span>主办方</span><input data-field="organizer" type="text" autocomplete="off"></label>
+                <label class="field"><span>奖池</span><input data-field="rewards" type="text" placeholder="例如 500 USDT" autocomplete="off"></label>
+                <label class="field"><span>开始时间（UTC+8）</span><input data-field="startTime" type="datetime-local" step="1"></label>
+                <label class="field"><span>结束时间（UTC+8）</span><input data-field="endTime" type="datetime-local" step="1"></label>
+                <label class="field full"><span>活动状态</span><select data-field="status"><option value="unknown">根据活动时间判断</option><option value="active">进行中</option><option value="upcoming">未开始</option><option value="ended">已结束</option></select></label>
+              </div>
+            </details>
+          </section>
+
+          <section class="panel" aria-labelledby="tasks-heading" hidden>
+            <div class="section-heading">
+              <h2 id="tasks-heading">X 任务</h2>
+              <span class="muted optional">选填</span>
+            </div>
+            <p class="section-description">从 TaskOn 复制账号、推文链接或任务要求。进行中的活动会把这些任务加入文案。</p>
+            <div id="tasks"></div>
+            <button id="add-task" class="button add-task" type="button"><span aria-hidden="true">＋</span>添加 X 任务</button>
+          </section>
+        </div>
+
+        <section class="panel preview" aria-labelledby="preview-heading">
+          <div class="toolbar">
+            <div class="section-heading">
+              <h2 id="preview-heading">英文文案</h2>
+              <span id="campaign-status" class="campaign-status" hidden></span>
+            </div>
+            <div class="toolbar-actions">
+              <button id="copy-post" class="button secondary" type="button" disabled>复制文案</button>
+              <button id="copy-combined" class="button primary" type="button" disabled><i class="copy-icon" aria-hidden="true"></i>复制图文</button>
+            </div>
+          </div>
+          <textarea id="post-text" class="post-text" aria-label="可编辑的英文社群文案" placeholder="生成的英文文案会出现在这里，可以直接编辑。" spellcheck="false" lang="en" rows="9"></textarea>
+          <div class="preview-meta">
+            <p id="copy-status" class="feedback" role="status"></p>
+            <button id="restore-post" class="text-button" type="button" hidden>恢复生成的文案</button>
+          </div>
+
+          <div class="cover-section">
+            <div class="toolbar">
+              <h2>活动配图</h2>
+              <div class="toolbar-actions">
+                <button id="choose-cover" class="button secondary" type="button">上传图片</button>
+                <button id="copy-cover" class="button secondary" type="button" disabled>复制图片</button>
+                <button id="download-cover" class="button secondary" type="button" disabled><i class="download-icon" aria-hidden="true"></i>下载图片</button>
+              </div>
+            </div>
+            <input type="file" id="cover-upload" accept="image/png,image/jpeg,image/webp" hidden>
+            <div id="cover-placeholder" class="cover-placeholder">
+              <i class="image-icon" aria-hidden="true"></i>
+              <span id="cover-placeholder-text">导入活动后预览官方封面</span>
+            </div>
+            <figure id="cover-figure" class="cover-figure" hidden>
+              <img id="cover-image" alt="活动配图">
+            </figure>
+            <p id="cover-status" class="feedback cover-status" role="status"></p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <template id="task-template">
+      <fieldset class="task-card">
+        <legend class="visually-hidden">X 任务</legend>
+        <div class="task-header">
+          <label class="field"><span class="visually-hidden">任务类型</span><select class="task-type">
+            <option value="follow">关注账号</option>
+            <option value="like">点赞推文</option>
+            <option value="repost">转发推文</option>
+            <option value="quote">引用推文</option>
+            <option value="reply">回复推文</option>
+            <option value="publish">发布推文</option>
+            <option value="other">其他 X 任务</option>
+          </select></label>
+          <button class="text-button remove-task" type="button">移除</button>
+        </div>
+        <label class="field task-target-field"><span class="target-label"></span><input class="task-target" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+        <label class="field"><span class="details-label"></span><textarea class="task-details" rows="2" spellcheck="false"></textarea></label>
+        <p class="feedback task-error" role="status" hidden></p>
+      </fieldset>
+    </template>
+  </body>
+</html>
